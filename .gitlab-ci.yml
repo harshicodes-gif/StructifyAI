@@ -1,6 +1,6 @@
 default:
   tags:
-    - shared
+    - windows
 
 stages:
   - install
@@ -9,37 +9,30 @@ stages:
   - security
   - build
 
-variables:
-  PIP_DISABLE_PIP_VERSION_CHECK: "1"
-  PYTHONDONTWRITEBYTECODE: "1"
-
-before_script:
-  - python --version
-  - python -m pip install --upgrade pip
-  - python -m pip install -r requirements.txt
-
 install_dependencies:
   stage: install
   script:
-    - python -m pip list
+    - python --version
+    - python -m pip install --upgrade pip
+    - python -m pip install -r requirements.txt
 
 lint_code:
   stage: lint
   script:
     - python -m pip install ruff
-    - ruff check .
+    - python -m ruff check .
 
 test_code:
   stage: test
   script:
     - python -m pip install pytest
-    - pytest tests/
+    - python -m pytest
 
 security_check:
   stage: security
   script:
     - python -m pip install bandit
-    - bandit -r backend frontend app.py -x tests,.venv,venv
+    - python -m bandit -r app.py backend frontend -x tests,.venv,venv
 
 build_check:
   stage: build
