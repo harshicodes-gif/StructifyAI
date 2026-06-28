@@ -1,9 +1,3 @@
-image: python:3.11
-
-default:
-  tags:
-    - windows
-
 stages:
   - install
   - lint
@@ -11,33 +5,23 @@ stages:
   - security
   - build
 
-install_dependencies:
+.install_template:
   stage: install
   script:
     - python --version
     - pip install --upgrade pip
     - pip install -r requirements.txt
 
-lint_code:
-  stage: lint
-  script:
-    - pip install ruff
-    - ruff check .
+install_mac:
+  extends: .install_template
+  tags:
+    - mac
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "harshita"'
 
-test_code:
-  stage: test
-  script:
-    - pip install pytest
-    - pip install -r requirements.txt
-    - pytest
-
-security_check:
-  stage: security
-  script:
-    - pip install bandit
-    - bandit -r backend frontend app.py -x tests,.venv,venv
-
-build_check:
-  stage: build
-  script:
-    - python -m compileall .
+install_windows:
+  extends: .install_template
+  tags:
+    - windows
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "adwitha"'
