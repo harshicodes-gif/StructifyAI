@@ -1,3 +1,7 @@
+default:
+  tags:
+    - shared
+
 stages:
   - install
   - lint
@@ -5,23 +9,39 @@ stages:
   - security
   - build
 
-.install_template:
+variables:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+before_script:
+  - python --version
+  - python -m pip install --upgrade pip
+  - python -m pip install -r requirements.txt
+
+install_dependencies:
   stage: install
   script:
-    - python --version
-    - pip install --upgrade pip
-    - pip install -r requirements.txt
+    - python -m pip list
 
-install_mac:
-  extends: .install_template
-  tags:
-    - mac
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "harshita"'
+lint_code:
+  stage: lint
+  script:
+    - python -m pip install ruff
+    - ruff check .
 
-install_windows:
-  extends: .install_template
-  tags:
-    - windows
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "adwitha"'
+test_code:
+  stage: test
+  script:
+    - python -m pip install pytest
+    - pytest tests/
+
+security_check:
+  stage: security
+  script:
+    - python -m pip install bandit
+    - bandit -r backend frontend app.py -x tests,.venv,venv
+
+build_check:
+  stage: build
+  script:
+    - python -m compileall .
