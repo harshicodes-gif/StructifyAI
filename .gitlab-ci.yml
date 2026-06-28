@@ -1,0 +1,43 @@
+image: python:3.11
+
+default:
+  tags:
+    - windows
+
+stages:
+  - install
+  - lint
+  - test
+  - security
+  - build
+
+install_dependencies:
+  stage: install
+  script:
+    - python --version
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+
+lint_code:
+  stage: lint
+  script:
+    - pip install ruff
+    - ruff check .
+
+test_code:
+  stage: test
+  script:
+    - pip install pytest
+    - pip install -r requirements.txt
+    - pytest
+
+security_check:
+  stage: security
+  script:
+    - pip install bandit
+    - bandit -r . -x .venv,venv
+
+build_check:
+  stage: build
+  script:
+    - python -m compileall .
