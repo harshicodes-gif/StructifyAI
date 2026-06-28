@@ -5,33 +5,46 @@ stages:
   - security
   - build
 
+variables:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 install_dependencies:
   stage: install
   script:
-    - python3 --version || python --version
-    - python3 -m pip install --upgrade pip || python -m pip install --upgrade pip
-    - python3 -m pip install -r requirements.txt || python -m pip install -r requirements.txt
+    - |
+      if command -v python3 >/dev/null 2>&1; then
+        PYTHON=python3
+      elif command -v python >/dev/null 2>&1; then
+        PYTHON=python
+      elif command -v py >/dev/null 2>&1; then
+        PYTHON="py -3"
+      else
+        echo "Python not found!"
+        exit 1
+      fi
+    - $PYTHON --version
+    - $PYTHON -m pip install --upgrade pip
+    - $PYTHON -m pip install -r requirements.txt
 
 lint_code:
   stage: lint
   script:
-    - python3 -m pip install ruff || python -m pip install ruff
-    - python3 -m ruff check . || python -m ruff check .
+    - $PYTHON -m pip install ruff
+    - $PYTHON -m ruff check .
 
 test_code:
   stage: test
   script:
-    - python3 -m pip install pytest || python -m pip install pytest
-    - python3 -m pip install -r requirements.txt || python -m pip install -r requirements.txt
-    - python3 -m pytest || python -m pytest
+    - $PYTHON -m pip install pytest
+    - $PYTHON -m pytest
 
 security_check:
   stage: security
   script:
-    - python3 -m pip install bandit || python -m pip install bandit
-    - python3 -m bandit -r app.py backend frontend -x tests,.venv,venv || python -m bandit -r app.py backend frontend -x tests,.venv,venv
+    - $PYTHON -m pip install bandit
+    - $PYTHON -m bandit -r app.py backend frontend -x tests,.venv,venv
 
 build_check:
   stage: build
   script:
-    - python3 -m compileall . || python -m compileall .
+    - $PYTHON -m compileall .
