@@ -2,7 +2,7 @@ image: python:3.11
 
 default:
   tags:
-    - adwitha
+    - windows
 
 stages:
   - install
