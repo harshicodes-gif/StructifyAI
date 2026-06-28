@@ -1,0 +1,69 @@
+# Python
+
+**pycache**/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual Environment
+
+.venv/
+venv/
+env/
+
+# Environment Variables
+
+.env
+
+# Streamlit
+
+.streamlit/
+
+# Database
+
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+
+*.log
+
+# Build Files
+
+build/
+dist/
+*.spec
+
+# IDE
+
+.vscode/
+.idea/
+
+# OS Files
+
+.DS_Store
+Thumbs.db
+
+# Python Cache
+
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Uploads & Outputs
+
+uploads/
+outputs/
+cache/
+
+# Models (if downloaded locally)
+
+models/
+
+# Temporary Files
+
+*.tmp
+*.bak
