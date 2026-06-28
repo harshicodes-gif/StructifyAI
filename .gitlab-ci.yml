@@ -1,7 +1,3 @@
-default:
-  tags:
-    - shared
-
 stages:
   - install
   - lint
@@ -9,39 +5,33 @@ stages:
   - security
   - build
 
-variables:
-  PIP_DISABLE_PIP_VERSION_CHECK: "1"
-  PYTHONDONTWRITEBYTECODE: "1"
-
-before_script:
-  - python --version
-  - python -m pip install --upgrade pip
-  - python -m pip install -r requirements.txt
-
 install_dependencies:
   stage: install
   script:
-    - python -m pip list
+    - python3 --version || python --version
+    - python3 -m pip install --upgrade pip || python -m pip install --upgrade pip
+    - python3 -m pip install -r requirements.txt || python -m pip install -r requirements.txt
 
 lint_code:
   stage: lint
   script:
-    - python -m pip install ruff
-    - ruff check .
+    - python3 -m pip install ruff || python -m pip install ruff
+    - python3 -m ruff check . || python -m ruff check .
 
 test_code:
   stage: test
   script:
-    - python -m pip install pytest
-    - pytest tests/
+    - python3 -m pip install pytest || python -m pip install pytest
+    - python3 -m pip install -r requirements.txt || python -m pip install -r requirements.txt
+    - python3 -m pytest || python -m pytest
 
 security_check:
   stage: security
   script:
-    - python -m pip install bandit
-    - bandit -r backend frontend app.py -x tests,.venv,venv
+    - python3 -m pip install bandit || python -m pip install bandit
+    - python3 -m bandit -r app.py backend frontend -x tests,.venv,venv || python -m bandit -r app.py backend frontend -x tests,.venv,venv
 
 build_check:
   stage: build
   script:
-    - python -m compileall .
+    - python3 -m compileall . || python -m compileall .
