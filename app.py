@@ -1,24 +1,33 @@
 import streamlit as st
 
-from frontend.styles import apply_theme
 from backend.database.sqlite import initialize_database
+from frontend.styles import apply_theme
+from frontend.components.navbar import show_navigation
+
+from frontend.pages.home import show_home
+from frontend.pages.upload import show_upload
+from frontend.pages.history import show_history
+from frontend.pages.settings import show_settings
 
 st.set_page_config(
     page_title="Structify AI",
     page_icon="🤖",
-    layout="wide"
+    layout="wide",
 )
 
 apply_theme()
-
 initialize_database()
 
-st.title("🤖 Structify AI")
+page = show_navigation()
 
-st.subheader("Offline AI Document Intelligence")
+if page == "Home":
+    show_home()
 
-st.info(
-    "Upload a document to transform unstructured information into structured JSON."
-)
+elif page == "Upload":
+    show_upload()
 
-st.success("Application initialized successfully.")
+elif page == "History":
+    show_history()
+
+else:
+    show_settings()
