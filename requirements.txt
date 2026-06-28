@@ -1,0 +1,10 @@
+streamlit
+pandas
+pydantic
+easyocr
+pillow
+opencv-python
+numpy
+pytest
+ruff
+bandit
