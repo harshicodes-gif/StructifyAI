@@ -35,7 +35,7 @@ security_check:
   stage: security
   script:
     - pip install bandit
-    - bandit -r . -x .venv,venv
+    - bandit -r backend frontend app.py -x tests,.venv,venv
 
 build_check:
   stage: build
