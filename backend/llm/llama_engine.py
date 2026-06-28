@@ -3,33 +3,43 @@ from pathlib import Path
 
 from backend.llm.prompts import PROMPT
 
-# Flag to determine whether the local LLM is available
 LLM_AVAILABLE = False
 llm = None
 
 try:
     from llama_cpp import Llama
 
-    MODEL_PATH = Path("models/qwen2.5-3b-instruct-q4_k_m.gguf")
+    # Path to your GGUF model
+    MODEL_PATH = Path("models/qwen.gguf")
+
+    print(f"Looking for model at: {MODEL_PATH.resolve()}")
+    print(f"Model exists: {MODEL_PATH.exists()}")
 
     if MODEL_PATH.exists():
+        print("Loading Qwen model...")
+
         llm = Llama(
             model_path=str(MODEL_PATH),
             n_ctx=4096,
             n_threads=8,
+            verbose=False,
         )
+
         LLM_AVAILABLE = True
+        print("✅ Qwen model loaded successfully!")
+
+    else:
+        print("❌ Model file not found!")
 
 except Exception as e:
-    print(f"[StructifyAI] Local LLM unavailable: {e}")
+    print("❌ Failed to initialize llama.cpp")
+    print(e)
 
 
 def extract_json(text: str) -> dict:
     """
-    Convert OCR text into structured JSON.
-
-    Uses the local LLM if available.
-    Otherwise returns a mock response so the app continues to work.
+    Converts OCR text into structured JSON using the local Qwen model.
+    Falls back to a mock response if the model isn't available.
     """
 
     if not LLM_AVAILABLE or llm is None:
@@ -39,20 +49,30 @@ def extract_json(text: str) -> dict:
             "issue": "Bearing Failure",
             "priority": "High",
             "recommendation": "Replace Bearing",
-            "note": "Mock response (llama.cpp not installed or model not found)",
+            "note": "Mock response (Qwen model unavailable)"
         }
 
     prompt = PROMPT.format(text=text)
 
-    output = llm(
-        prompt,
-        max_tokens=512,
-        temperature=0,
-    )
-
-    response = output["choices"][0]["text"]
-
     try:
-        return json.loads(response)
-    except json.JSONDecodeError:
-        return {"raw_response": response, "error": "Model did not return valid JSON."}
+        output = llm(
+            prompt,
+            max_tokens=512,
+            temperature=0,
+        )
+
+        response = output["choices"][0]["text"].strip()
+
+        try:
+            return json.loads(response)
+
+        except json.JSONDecodeError:
+            return {
+                "error": "Model did not return valid JSON.",
+                "raw_response": response,
+            }
+
+    except Exception as e:
+        return {
+            "error": f"LLM inference failed: {e}"
+        }
