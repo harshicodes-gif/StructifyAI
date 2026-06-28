@@ -1,18 +1,19 @@
-def extract_text(file_path: str) -> str:
-    """
-    Temporary OCR implementation.
+import easyocr
 
-    We'll replace this with EasyOCR in the next sprint.
-    """
+reader = easyocr.Reader(
+    ["en"],
+    gpu=False,
+)
 
-    return """
-Asset: Pump P-101
 
-Operator: John Smith
+def extract_text(image_path):
 
-Issue: Bearing Failure
+    result = reader.readtext(image_path)
 
-Priority: High
+    text = []
 
-Recommendation: Replace Bearing
-"""
+    for _, value, _ in result:
+
+        text.append(value)
+
+    return "\n".join(text)
