@@ -24,7 +24,7 @@ def extract_text(file_path: str) -> str:
     Falls back to mock text if EasyOCR is not installed.
     """
 
-    if not OCR_AVAILABLE:
+    if not OCR_AVAILABLE or reader is None:
         return """
 Asset: Pump P-101
 Operator: John Smith

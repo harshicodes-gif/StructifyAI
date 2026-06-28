@@ -1,0 +1,4 @@
+title = "Structify AI gitleaks configuration"
+
+[extend]
+useDefault = true

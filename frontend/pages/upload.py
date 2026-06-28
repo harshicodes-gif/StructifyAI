@@ -4,8 +4,8 @@ import os
 import streamlit as st
 from PIL import Image
 
-from frontend.components.uploader import upload_document
 from backend.services.extraction_service import process_document
+from frontend.components.uploader import upload_document
 
 
 def show_upload():
@@ -31,11 +31,9 @@ def show_upload():
             st.success("PDF uploaded successfully.")
 
     with right:
-
         st.subheader("Structured JSON")
 
         if st.button("🚀 Process Document", use_container_width=True):
-
             os.makedirs("uploads", exist_ok=True)
 
             filepath = os.path.join("uploads", uploaded.name)
@@ -44,9 +42,7 @@ def show_upload():
                 file.write(uploaded.getbuffer())
 
             with st.spinner("Running OCR and Local AI..."):
-
                 try:
-
                     result = process_document(filepath)
 
                     st.success("Document processed successfully!")
@@ -62,5 +58,4 @@ def show_upload():
                     )
 
                 except Exception as e:
-
                     st.error(f"Processing failed.\n\n{e}")

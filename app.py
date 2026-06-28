@@ -1,13 +1,12 @@
 import streamlit as st
 
 from backend.database.sqlite import initialize_database
-from frontend.styles import apply_theme
 from frontend.components.navbar import show_navigation
-
-from frontend.pages.home import show_home
-from frontend.pages.upload import show_upload
 from frontend.pages.history import show_history
+from frontend.pages.home import show_home
 from frontend.pages.settings import show_settings
+from frontend.pages.upload import show_upload
+from frontend.styles import apply_theme
 
 st.set_page_config(
     page_title="Structify AI",

@@ -32,14 +32,14 @@ def extract_json(text: str) -> dict:
     Otherwise returns a mock response so the app continues to work.
     """
 
-    if not LLM_AVAILABLE:
+    if not LLM_AVAILABLE or llm is None:
         return {
             "asset": "Pump P-101",
             "operator": "John Smith",
             "issue": "Bearing Failure",
             "priority": "High",
             "recommendation": "Replace Bearing",
-            "note": "Mock response (llama.cpp not installed or model not found)"
+            "note": "Mock response (llama.cpp not installed or model not found)",
         }
 
     prompt = PROMPT.format(text=text)
@@ -55,7 +55,4 @@ def extract_json(text: str) -> dict:
     try:
         return json.loads(response)
     except json.JSONDecodeError:
-        return {
-            "raw_response": response,
-            "error": "Model did not return valid JSON."
-        }
+        return {"raw_response": response, "error": "Model did not return valid JSON."}
