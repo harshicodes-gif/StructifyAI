@@ -1,14 +1,28 @@
 import json
 
-from backend.cache.cache import get, set_cache
+from backend.cache.cache import get_cache, set_cache
 from backend.llm.llama_engine import extract_json
 from backend.ocr.easyocr_engine import extract_text
 
 
 def process_document(file_path: str) -> dict:
-    cached_result = get(file_path)
+    """
+    Complete document processing pipeline.
 
-    if cached_result:
+    Image/PDF
+        ↓
+      OCR
+        ↓
+     Cache
+        ↓
+      LLM
+        ↓
+ Structured JSON
+    """
+
+    cached_result = get_cache(file_path)
+
+    if cached_result is not None:
         return cached_result
 
     extracted_text = extract_text(file_path)
