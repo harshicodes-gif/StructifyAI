@@ -1,0 +1,12 @@
+rules:
+  - id: no-eval
+    pattern: eval(...)
+    message: Avoid eval; parse structured input explicitly.
+    severity: ERROR
+    languages: [python]
+
+  - id: no-exec
+    pattern: exec(...)
+    message: Avoid exec; use explicit functions or safe interpreters.
+    severity: ERROR
+    languages: [python]

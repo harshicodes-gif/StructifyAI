@@ -8,21 +8,13 @@ def show_navigation():
         st.title("🤖 Structify AI")
 
         page = st.radio(
-
             "Navigation",
-
             [
-
                 "Home",
-
                 "Upload",
-
                 "History",
-
                 "Settings",
-
             ],
-
         )
 
     return page

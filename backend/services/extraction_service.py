@@ -7,17 +7,17 @@ from backend.ocr.easyocr_engine import extract_text
 
 def process_document(file_path: str) -> dict:
     """
-    Complete document processing pipeline.
+       Complete document processing pipeline.
 
-    Image/PDF
-        ↓
-      OCR
-        ↓
-     Cache
-        ↓
-      LLM
-        ↓
- Structured JSON
+       Image/PDF
+           ↓
+         OCR
+           ↓
+        Cache
+           ↓
+         LLM
+           ↓
+    Structured JSON
     """
 
     cached_result = get_cache(file_path)

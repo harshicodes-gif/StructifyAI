@@ -10,7 +10,15 @@ python-dotenv
 psutil
 
 pytest
+pytest-cov
 ruff
 bandit
 black
 mypy
+pylint
+flake8
+vulture
+semgrep
+pyupgrade
+pre-commit
+pip-audit

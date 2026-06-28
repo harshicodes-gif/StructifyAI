@@ -15,8 +15,7 @@ def initialize_database() -> None:
 
     cursor = connection.cursor()
 
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS documents (
 
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,8 +29,7 @@ def initialize_database() -> None:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
         );
-        """
-    )
+        """)
 
     connection.commit()
 

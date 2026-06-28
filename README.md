@@ -2,7 +2,7 @@
 
 > **Offline, CPU-First AI for Transforming Unstructured Documents into Structured Intelligence**
 
-![License](https://img.shields.io/badge/License-GPLv3-blue.svg)
+![License](https://img.shields.io/badge/License-AGPLv3-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Offline-success.svg)
 ![Runtime](https://img.shields.io/badge/Inference-CPU--Only-green.svg)
@@ -342,7 +342,7 @@ The application runs completely offline.
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
 See the **LICENSE** file for more information.
 

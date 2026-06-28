@@ -4,8 +4,8 @@ import os
 import streamlit as st
 from PIL import Image
 
-from frontend.components.uploader import upload_document
 from backend.services.extraction_service import process_document
+from frontend.components.uploader import upload_document
 
 
 def show_upload():
