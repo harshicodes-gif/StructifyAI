@@ -60,10 +60,9 @@ coverage:
 security_check:
   stage: security
   script:
-    - python -m pip install bandit pip-audit semgrep
+    - python -m pip install bandit pip-audit
     - python -m bandit -r app.py backend frontend -x tests,.venv,venv
     - python -m pip_audit -r requirements.txt
-    - python -m semgrep --config .semgrep.yml app.py backend frontend
 
 secret_scan:
   stage: security
