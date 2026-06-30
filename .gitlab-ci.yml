@@ -24,14 +24,24 @@ install_dependencies:
 format_code:
   stage: format
   script:
-    - python -m pip install black==26.5.1 ruff==0.5.0
-    - python -m black --check .
+    - python --version
+    - python -m pip install --upgrade --force-reinstall black==26.5.1 ruff==0.5.0
+    - python -m black --version
+    - python -m ruff --version
+    - echo ===== CURRENT DIRECTORY =====
+    - cd
+    - dir
+    - echo ===== PYPROJECT =====
+    - type pyproject.toml
+    - echo ===== BLACK CHECK =====
+    - python -m black --verbose --check .
+    - echo ===== RUFF CHECK =====
     - python -m ruff format --check .
 
 lint_code:
   stage: lint
   script:
-    - python -m pip install ruff==0.5.0
+    - python -m pip install --upgrade --force-reinstall ruff==0.5.0
     - python -m ruff check .
 
 type_check:
