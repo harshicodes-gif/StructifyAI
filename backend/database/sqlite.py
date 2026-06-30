@@ -11,35 +11,25 @@ logger = get_logger(__name__)
 
 def initialize_database() -> None:
     """Create SQLite database if it does not exist."""
-
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     connection = _connect()
-
     cursor = connection.cursor()
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS documents (
-
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-
             filename TEXT,
-
             file_path TEXT,
-
             document_type TEXT,
-
             extracted_json TEXT,
-
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
         );
         """)
 
     _ensure_column(cursor, "documents", "file_path", "TEXT")
 
     connection.commit()
-
     connection.close()
 
     logger.info("Database initialized.")
@@ -51,7 +41,6 @@ def save_document(
     structured_json: dict[str, Any],
 ) -> int:
     """Persist processed document metadata and structured extraction output."""
-
     initialize_database()
 
     document_type = _clean_text(structured_json.get("document_type"))
@@ -68,7 +57,11 @@ def save_document(
         (filename, str(file_path), document_type, extracted_json),
     )
 
-    document_id = int(cursor.lastrowid)
+    lastrowid = cursor.lastrowid
+    if lastrowid is None:
+        raise RuntimeError("Failed to save document.")
+
+    document_id = int(lastrowid)
 
     connection.commit()
     connection.close()
@@ -78,7 +71,6 @@ def save_document(
 
 def list_documents() -> list[dict[str, Any]]:
     """Return processed documents, newest first."""
-
     initialize_database()
 
     connection = _connect()
@@ -99,7 +91,6 @@ def list_documents() -> list[dict[str, Any]]:
 
 def get_document(document_id: int) -> dict[str, Any] | None:
     """Return one processed document by id."""
-
     initialize_database()
 
     connection = _connect()
