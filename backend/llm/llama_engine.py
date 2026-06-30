@@ -49,7 +49,7 @@ def extract_json(text: str) -> dict:
             "issue": "Bearing Failure",
             "priority": "High",
             "recommendation": "Replace Bearing",
-            "note": "Mock response (Qwen model unavailable)"
+            "note": "Mock response (Qwen model unavailable)",
         }
 
     prompt = PROMPT.format(text=text)
@@ -73,6 +73,4 @@ def extract_json(text: str) -> dict:
             }
 
     except Exception as e:
-        return {
-            "error": f"LLM inference failed: {e}"
-        }
+        return {"error": f"LLM inference failed: {e}"}

@@ -7,7 +7,8 @@ def show_home():
 
     st.subheader("Offline CPU-First Document Intelligence")
 
-    st.info("""
+    st.info(
+        """
         Transform unstructured documents into structured JSON.
 
         ✔ Offline First
@@ -19,7 +20,8 @@ def show_home():
         ✔ OCR Powered
 
         ✔ Local LLM
-        """)
+        """
+    )
 
     c1, c2, c3, c4 = st.columns(4)
 
