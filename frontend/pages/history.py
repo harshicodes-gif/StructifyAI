@@ -6,7 +6,11 @@ from typing import Any
 import streamlit as st
 from PIL import Image
 
-from backend.database.sqlite import get_document, list_documents
+from backend.database.sqlite import (
+    get_document,
+    is_persistent_history_available,
+    list_documents,
+)
 
 DISPLAY_FIELDS = {
     "document_type": "Document Type",
@@ -25,6 +29,9 @@ def show_history():
     st.title("History")
 
     documents = list_documents()
+
+    if not is_persistent_history_available():
+        st.info("History is available only during the current session.")
 
     if not documents:
         st.info("Processed documents will appear here.")
