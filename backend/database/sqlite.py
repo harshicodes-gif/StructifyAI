@@ -42,9 +42,9 @@ def initialize_database() -> bool:
 
         connection.commit()
         connection.close()
+
     except sqlite3.Error as exc:
-        _sqlite_available = False
-        logger.warning("SQLite persistence unavailable: %s", exc)
+        _mark_sqlite_unavailable(exc)
         return False
 
     _sqlite_available = True
@@ -53,14 +53,8 @@ def initialize_database() -> bool:
 
 
 def is_persistent_history_available() -> bool:
-    """Return whether SQLite history persistence is available."""
-    try:
-        initialize_database()
-    except Exception:
-        logger.warning("Persistent history is not available.", exc_info=True)
-        return False
-
-    return True
+    """Return whether history is backed by SQLite for this process."""
+    return initialize_database()
 
 
 def save_document(
@@ -95,6 +89,7 @@ def save_document(
 
         connection.commit()
         connection.close()
+
     except sqlite3.Error as exc:
         _mark_sqlite_unavailable(exc)
         return _save_document_in_memory(filename, file_path, structured_json)
@@ -120,6 +115,7 @@ def list_documents() -> list[dict[str, Any]]:
         documents = [_row_to_document(row) for row in cursor.fetchall()]
 
         connection.close()
+
     except sqlite3.Error as exc:
         _mark_sqlite_unavailable(exc)
         return list(_memory_documents)
@@ -147,6 +143,7 @@ def get_document(document_id: int) -> dict[str, Any] | None:
 
         row = cursor.fetchone()
         connection.close()
+
     except sqlite3.Error as exc:
         _mark_sqlite_unavailable(exc)
         return _get_memory_document(document_id)
@@ -157,17 +154,13 @@ def get_document(document_id: int) -> dict[str, Any] | None:
     return _row_to_document(row)
 
 
-def is_persistent_history_available() -> bool:
-    """Return whether history is backed by SQLite for this process."""
-    return initialize_database()
-
-
 def _connect() -> sqlite3.Connection:
     return sqlite3.connect(DATABASE_PATH)
 
 
 def _mark_sqlite_unavailable(exc: sqlite3.Error) -> None:
     global _sqlite_available
+
     _sqlite_available = False
     logger.warning("SQLite persistence unavailable: %s", exc)
 
@@ -179,17 +172,21 @@ def _save_document_in_memory(
 ) -> int:
     global _next_memory_id
 
+    document_id = _next_memory_id
+
     document = {
-        "id": _next_memory_id,
+        "id": document_id,
         "filename": filename,
         "file_path": str(file_path),
         "document_type": _clean_text(structured_json.get("document_type")),
         "structured_json": structured_json,
         "created_at": datetime.now().isoformat(timespec="seconds"),
     }
+
     _next_memory_id += 1
     _memory_documents.insert(0, document)
-    return _next_memory_id - 1
+
+    return document_id
 
 
 def _get_memory_document(document_id: int) -> dict[str, Any] | None:

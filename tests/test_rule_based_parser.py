@@ -67,3 +67,46 @@ def test_parse_ocr_text_extracts_multiline_maintenance_report():
         == "Replace the damaged bearing, inspect the shaft alignment, and refill lubricating oil before restarting the equipment."
     )
     assert result["date"] == "30-06-2026"
+
+
+def test_parse_ocr_text_extracts_adjacent_ocr_labels():
+    result = parse_ocr_text(
+        "Maintenance Report Asset: Air Compressor AC-204 "
+        "Operator: Adwitha Reddy Priority: HIGH Date: 30-06-2026"
+    )
+
+    assert result["asset"] == "Air Compressor AC-204"
+    assert result["operator"] == "Adwitha Reddy"
+    assert result["priority"] == "High"
+    assert result["date"] == "30-06-2026"
+
+
+def test_parse_ocr_text_extracts_inspector_and_multiline_synonyms():
+    result = parse_ocr_text("""
+        Inspection Report
+        Asset Air Compressor AC-204
+        Inspector: Rahul Kumar
+        Problem Description
+        Compressor pressure drops below the expected operating range.
+        Inspection Findings
+        Gauge calibration is overdue.
+        Corrective Action:
+        Calibrate the pressure gauge and inspect the inlet valve.
+        Safety Precautions:
+        Lock out equipment before service.
+        Priority HIGH
+        Date 30-06-2026
+        """)
+
+    assert result["asset"] == "Air Compressor AC-204"
+    assert result["operator"] == "Rahul Kumar"
+    assert (
+        result["issue"]
+        == "Compressor pressure drops below the expected operating range."
+    )
+    assert (
+        result["recommendation"]
+        == "Calibrate the pressure gauge and inspect the inlet valve."
+    )
+    assert result["priority"] == "High"
+    assert result["date"] == "30-06-2026"
