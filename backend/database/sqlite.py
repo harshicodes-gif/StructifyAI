@@ -202,9 +202,7 @@ def _save_document_in_memory(
         "id": _next_memory_id,
         "filename": filename,
         "file_path": str(file_path),
-        "document_type": _clean_text(
-            structured_json.get("document_type")
-        ),
+        "document_type": _clean_text(structured_json.get("document_type")),
         "structured_json": structured_json,
         "created_at": datetime.now().isoformat(timespec="seconds"),
     }
@@ -238,8 +236,7 @@ def _ensure_column(
 
     if column_name not in existing:
         cursor.execute(
-            f"ALTER TABLE {table_name} "
-            f"ADD COLUMN {column_name} {column_type}"
+            f"ALTER TABLE {table_name} " f"ADD COLUMN {column_name} {column_type}"
         )
 
 
@@ -250,8 +247,7 @@ def _row_to_document(row) -> dict[str, Any]:
         "id": row[0],
         "filename": row[1] or "",
         "file_path": row[2] or "",
-        "document_type": row[3]
-        or _clean_text(structured_json.get("document_type")),
+        "document_type": row[3] or _clean_text(structured_json.get("document_type")),
         "structured_json": structured_json,
         "created_at": row[5] or "",
     }

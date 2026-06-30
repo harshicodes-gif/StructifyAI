@@ -2,7 +2,8 @@ from backend.services.rule_based_parser import parse_ocr_text
 
 
 def test_parse_ocr_text_extracts_known_fields():
-    result = parse_ocr_text("""
+    result = parse_ocr_text(
+        """
         Maintenance Report
         Asset: Pump P-101
         Operator: John Smith
@@ -10,7 +11,8 @@ def test_parse_ocr_text_extracts_known_fields():
         Priority: High
         Recommendation: Replace Bearing
         Date: 2026-06-30
-        """)
+        """
+    )
 
     assert result["document_type"] == "Maintenance Report"
     assert result["asset"] == "Pump P-101"
@@ -34,7 +36,8 @@ def test_parse_ocr_text_uses_not_found_for_missing_fields():
 
 
 def test_parse_ocr_text_extracts_multiline_maintenance_report():
-    result = parse_ocr_text("""
+    result = parse_ocr_text(
+        """
         MAINTENANCE REPORT
 
         Report ID: MR-2026-001
@@ -52,7 +55,8 @@ def test_parse_ocr_text_extracts_multiline_maintenance_report():
 
         Recommendation:
         Replace the damaged bearing, inspect the shaft alignment, and refill lubricating oil before restarting the equipment.
-        """)
+        """
+    )
 
     assert result["document_type"] == "Maintenance Report"
     assert result["asset"] == "Pump P-101"
@@ -82,7 +86,8 @@ def test_parse_ocr_text_extracts_adjacent_ocr_labels():
 
 
 def test_parse_ocr_text_extracts_inspector_and_multiline_synonyms():
-    result = parse_ocr_text("""
+    result = parse_ocr_text(
+        """
         Inspection Report
         Asset Air Compressor AC-204
         Inspector: Rahul Kumar
@@ -96,7 +101,8 @@ def test_parse_ocr_text_extracts_inspector_and_multiline_synonyms():
         Lock out equipment before service.
         Priority HIGH
         Date 30-06-2026
-        """)
+        """
+    )
 
     assert result["asset"] == "Air Compressor AC-204"
     assert result["operator"] == "Rahul Kumar"
