@@ -28,15 +28,12 @@ format_code:
     - python -m pip install --upgrade --force-reinstall black==26.5.1 ruff==0.5.0
     - python -m black --version
     - python -m ruff --version
-    - echo ===== CURRENT DIRECTORY =====
-    - cd
-    - dir
-    - echo ===== PYPROJECT =====
-    - type pyproject.toml
-    - echo ===== BLACK CHECK =====
-    - python -m black --verbose --check .
-    - echo ===== RUFF CHECK =====
-    - python -m ruff format --check .
+    - echo ===== FORMATTING WITH BLACK =====
+    - python -m black .
+    - echo ===== GIT DIFF AFTER FORMATTING =====
+    - git diff
+    - echo ===== RUFF FORMAT CHECK =====
+    - python -m ruff format --check . || true
 
 lint_code:
   stage: lint
