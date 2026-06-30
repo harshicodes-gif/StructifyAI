@@ -10,6 +10,7 @@ stages:
   - test
   - coverage
   - security
+  - changelog
   - quality
   - dead_code
   - build
@@ -98,8 +99,8 @@ quality_check:
     - python -m pip install pylint==3.3.8
     - python -m pylint backend frontend app.py --fail-under=5
 
-git_cliff_changelog:
-  stage: quality
+git-cliff:
+  stage: changelog
   script:
     - if (Test-Path cliff.toml) { Write-Host "git-cliff configuration found" } else { throw "Missing cliff.toml" }
     - if (Get-Command git-cliff -ErrorAction SilentlyContinue) { git-cliff --config cliff.toml --output CHANGELOG.md --latest --strip all } else { Write-Host "git-cliff command not installed on this runner; cliff.toml is present for automated changelog generation" }
