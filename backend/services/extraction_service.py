@@ -1,8 +1,9 @@
 import json
 
 from backend.cache.cache import get_cache, set_cache
-from backend.llm.llama_engine import extract_json
+from backend.llm.llama_engine import extract_json, is_ollama_available
 from backend.ocr.easyocr_engine import extract_text
+from backend.services.rule_based_parser import parse_ocr_text
 
 
 def process_document(file_path: str) -> dict:
@@ -27,7 +28,12 @@ def process_document(file_path: str) -> dict:
 
     extracted_text = extract_text(file_path)
 
-    structured_json = extract_json(extracted_text)
+    processing_mode = "Ollama" if is_ollama_available() else "OCR Only"
+
+    if processing_mode == "Ollama":
+        structured_json = extract_json(extracted_text)
+    else:
+        structured_json = parse_ocr_text(extracted_text)
 
     if isinstance(structured_json, str):
         try:
@@ -43,6 +49,7 @@ def process_document(file_path: str) -> dict:
         "file_path": file_path,
         "extracted_text": extracted_text,
         "structured_json": structured_json,
+        "processing_mode": processing_mode,
     }
 
     set_cache(file_path, result)

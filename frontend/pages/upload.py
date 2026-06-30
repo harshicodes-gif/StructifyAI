@@ -5,7 +5,7 @@ from pathlib import Path
 import streamlit as st
 from PIL import Image
 
-from backend.database.sqlite import save_document
+from backend.database.sqlite import is_persistent_history_available, save_document
 from backend.services.extraction_service import process_document
 from backend.utils.constants import UPLOAD_DIR
 from frontend.components.uploader import upload_document
@@ -109,7 +109,7 @@ def show_upload():
         if st.button("Process Document", use_container_width=True, type="primary"):
             filepath = _save_uploaded_file(uploaded)
 
-            with st.spinner("Running OCR and Local AI..."):
+            with st.spinner("Processing document..."):
                 try:
                     result = process_document(str(filepath))
                     structured_json = result.get("structured_json", {})
@@ -117,13 +117,16 @@ def show_upload():
                     if not isinstance(structured_json, dict):
                         structured_json = {}
 
-                    save_document(
+                    document_id = save_document(
                         filename=uploaded.name,
                         file_path=filepath,
                         structured_json=structured_json,
                     )
+                    st.session_state.selected_history_document_id = document_id
 
                     st.success("Document processed successfully!")
+                    if not is_persistent_history_available():
+                        st.info("History is available only during the current session.")
 
                     _show_extracted_information(result)
 

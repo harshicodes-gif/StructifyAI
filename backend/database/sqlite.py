@@ -35,6 +35,17 @@ def initialize_database() -> None:
     logger.info("Database initialized.")
 
 
+def is_persistent_history_available() -> bool:
+    """Return whether SQLite history persistence is available."""
+    try:
+        initialize_database()
+    except Exception:
+        logger.warning("Persistent history is not available.", exc_info=True)
+        return False
+
+    return True
+
+
 def save_document(
     filename: str,
     file_path: str | Path,
