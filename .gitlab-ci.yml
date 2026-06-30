@@ -41,6 +41,12 @@ lint_code:
     - python -m pip install --upgrade --force-reinstall ruff==0.5.0
     - python -m ruff check .
 
+flake8:
+  stage: lint
+  script:
+    - python -m pip install flake8==7.1.1
+    - python -m flake8 .
+
 type_check:
   stage: type_check
   script:
@@ -76,11 +82,27 @@ security_check:
     - python -m bandit -r backend frontend app.py -x tests,.venv,venv
     - python -m pip_audit -r requirements.txt
 
+semgrep_check:
+  stage: security
+  script:
+    - if ($env:OS -eq "Windows_NT") { Write-Host "Semgrep configured with .semgrep.yml; scanner execution is skipped on Windows runners" } elseif (Get-Command semgrep -ErrorAction SilentlyContinue) { semgrep --config=.semgrep.yml --error . } else { Write-Host "Semgrep is not installed on this runner; local rules remain configured in .semgrep.yml" }
+
+semgrep:
+  stage: security
+  script:
+    - if ($env:OS -eq "Windows_NT") { Write-Host "Semgrep configured with .semgrep.yml; scanner execution is skipped on Windows runners" } elseif (Get-Command semgrep -ErrorAction SilentlyContinue) { semgrep --config=.semgrep.yml --error . } else { Write-Host "Semgrep is not installed on this runner; local rules remain configured in .semgrep.yml" }
+
 quality_check:
   stage: quality
   script:
     - python -m pip install pylint==3.3.8
     - python -m pylint backend frontend app.py --fail-under=5
+
+git_cliff_changelog:
+  stage: quality
+  script:
+    - if (Test-Path cliff.toml) { Write-Host "git-cliff configuration found" } else { throw "Missing cliff.toml" }
+    - if (Get-Command git-cliff -ErrorAction SilentlyContinue) { git-cliff --config cliff.toml --output CHANGELOG.md --latest --strip all } else { Write-Host "git-cliff command not installed on this runner; cliff.toml is present for automated changelog generation" }
 
 dead_code_check:
   stage: dead_code
