@@ -10,6 +10,8 @@ stages:
   - test
   - coverage
   - security
+  - quality
+  - dead_code
   - build
 
 install_dependencies:
@@ -19,12 +21,6 @@ install_dependencies:
     - python -m pip install --upgrade pip
     - python -m pip install -r requirements.txt
 
-lint_code:
-  stage: lint
-  script:
-    - python -m pip install ruff
-    - python -m ruff check .
-
 format_code:
   stage: format
   script:
@@ -32,22 +28,31 @@ format_code:
     - python -m black --check .
     - python -m ruff format --check .
 
+lint_code:
+  stage: lint
+  script:
+    - python -m pip install ruff
+    - python -m ruff check .
+
 type_check:
   stage: type_check
   script:
     - python -m pip install -r requirements.txt
+    - python -m pip install mypy
     - python -m mypy app.py backend frontend
 
 test_code:
   stage: test
   script:
     - python -m pip install -r requirements.txt
+    - python -m pip install pytest
     - python -m pytest
 
 coverage:
   stage: coverage
   script:
     - python -m pip install -r requirements.txt
+    - python -m pip install pytest pytest-cov
     - python -m pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-fail-under=1
   artifacts:
     reports:
@@ -61,10 +66,20 @@ security_check:
   stage: security
   script:
     - python -m pip install bandit pip-audit
-    - python -m bandit -r app.py backend frontend -x tests,.venv,venv
+    - python -m bandit -r backend frontend app.py -x tests,.venv,venv
     - python -m pip_audit -r requirements.txt
 
+quality_check:
+  stage: quality
+  script:
+    - python -m pip install pylint
+    - python -m pylint backend frontend app.py --fail-under=5
 
+dead_code_check:
+  stage: dead_code
+  script:
+    - python -m pip install vulture
+    - python -m vulture backend frontend app.py --min-confidence 80 || exit 0
 
 build_check:
   stage: build
