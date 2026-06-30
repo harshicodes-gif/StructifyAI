@@ -90,7 +90,12 @@ def save_document(
             ),
         )
 
-        document_id = int(cursor.lastrowid)
+        lastrowid = cursor.lastrowid
+
+        if lastrowid is None:
+            raise RuntimeError("Failed to save document.")
+
+        document_id = lastrowid
 
         connection.commit()
         connection.close()
@@ -161,7 +166,7 @@ def get_document(document_id: int) -> dict[str, Any] | None:
                 extracted_json,
                 created_at
             FROM documents
-            WHERE id=?
+            WHERE id = ?
             """,
             (document_id,),
         )
@@ -198,8 +203,10 @@ def _save_document_in_memory(
 ) -> int:
     global _next_memory_id
 
+    document_id = _next_memory_id
+
     document = {
-        "id": _next_memory_id,
+        "id": document_id,
         "filename": filename,
         "file_path": str(file_path),
         "document_type": _clean_text(structured_json.get("document_type")),
@@ -211,7 +218,7 @@ def _save_document_in_memory(
 
     _next_memory_id += 1
 
-    return document["id"]
+    return document_id
 
 
 def _get_memory_document(
@@ -240,7 +247,7 @@ def _ensure_column(
         )
 
 
-def _row_to_document(row) -> dict[str, Any]:
+def _row_to_document(row: tuple[Any, ...]) -> dict[str, Any]:
     structured_json = _load_structured_json(row[4])
 
     return {
