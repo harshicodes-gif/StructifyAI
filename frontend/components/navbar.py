@@ -12,6 +12,7 @@ def show_navigation():
                 "Home",
                 "Upload",
                 "History",
+                "Analytics",
                 "Settings",
             ],
         )

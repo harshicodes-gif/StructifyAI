@@ -1,76 +1,78 @@
 import json
-from pathlib import Path
+from functools import lru_cache
+
+import requests
 
 from backend.llm.prompts import PROMPT
 
-LLM_AVAILABLE = False
-llm = None
+OLLAMA_URL = "http://localhost:11434"
+OLLAMA_TAGS_URL = f"{OLLAMA_URL}/api/tags"
+OLLAMA_GENERATE_URL = f"{OLLAMA_URL}/api/generate"
 
-try:
-    from llama_cpp import Llama
+# Default model. Change if you pull a different one.
+MODEL_NAME = "llama3.2:1b"
 
-    # Path to your GGUF model
-    MODEL_PATH = Path("models/qwen.gguf")
 
-    print(f"Looking for model at: {MODEL_PATH.resolve()}")
-    print(f"Model exists: {MODEL_PATH.exists()}")
+@lru_cache(maxsize=1)
+def is_ollama_available() -> bool:
+    """Return whether the local Ollama server is running."""
+    try:
+        response = requests.get(OLLAMA_TAGS_URL, timeout=2)
+        return response.ok
+    except requests.RequestException:
+        return False
 
-    if MODEL_PATH.exists():
-        print("Loading Qwen model...")
 
-        llm = Llama(
-            model_path=str(MODEL_PATH),
-            n_ctx=4096,
-            n_threads=8,
-            verbose=False,
-        )
-
-        LLM_AVAILABLE = True
-        print("✅ Qwen model loaded successfully!")
-
-    else:
-        print("❌ Model file not found!")
-
-except Exception as e:
-    print("❌ Failed to initialize llama.cpp")
-    print(e)
+def get_llm_mode() -> str:
+    """Return the active LLM mode."""
+    return "Ollama" if is_ollama_available() else "OCR Only"
 
 
 def extract_json(text: str) -> dict:
     """
-    Converts OCR text into structured JSON using the local Qwen model.
-    Falls back to a mock response if the model isn't available.
+    Convert OCR text into structured JSON using Ollama.
     """
 
-    if not LLM_AVAILABLE or llm is None:
+    if not is_ollama_available():
         return {
-            "asset": "Pump P-101",
-            "operator": "John Smith",
-            "issue": "Bearing Failure",
-            "priority": "High",
-            "recommendation": "Replace Bearing",
-            "note": "Mock response (Qwen model unavailable)",
+            "document_type": "Unknown",
+            "asset": "Not found",
+            "operator": "Not found",
+            "issue": "Not found",
+            "priority": "Not found",
+            "recommendation": "Not found",
+            "date": "Not found",
+            "error": "Ollama is not running.",
         }
 
     prompt = PROMPT.format(text=text)
 
     try:
-        output = llm(
-            prompt,
-            max_tokens=512,
-            temperature=0,
+        response = requests.post(
+            OLLAMA_GENERATE_URL,
+            json={
+                "model": MODEL_NAME,
+                "prompt": prompt,
+                "stream": False,
+                "format": "json",
+            },
+            timeout=120,
         )
 
-        response = output["choices"][0]["text"].strip()
+        response.raise_for_status()
 
-        try:
-            return json.loads(response)
+        output = response.json().get("response", "{}")
 
-        except json.JSONDecodeError:
-            return {
-                "error": "Model did not return valid JSON.",
-                "raw_response": response,
-            }
+        return json.loads(output)
 
     except Exception as e:
-        return {"error": f"LLM inference failed: {e}"}
+        return {
+            "document_type": "Unknown",
+            "asset": "Not found",
+            "operator": "Not found",
+            "issue": "Not found",
+            "priority": "Not found",
+            "recommendation": "Not found",
+            "date": "Not found",
+            "error": str(e),
+        }
