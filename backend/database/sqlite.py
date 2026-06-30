@@ -84,13 +84,11 @@ def list_documents() -> list[dict[str, Any]]:
     connection = _connect()
     cursor = connection.cursor()
 
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT id, filename, file_path, document_type, extracted_json, created_at
         FROM documents
         ORDER BY datetime(created_at) DESC, id DESC
-        """
-    )
+        """)
 
     documents = [_row_to_document(row) for row in cursor.fetchall()]
 

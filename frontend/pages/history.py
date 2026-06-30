@@ -135,9 +135,7 @@ def _show_selected_document(documents: list[dict[str, Any]]) -> None:
         _format_datetime(document.get("created_at", "")),
     )
 
-    preview_tab, extracted_tab = st.tabs(
-        ["Document Preview", "Extracted Information"]
-    )
+    preview_tab, extracted_tab = st.tabs(["Document Preview", "Extracted Information"])
 
     with preview_tab:
         _show_preview(document)
