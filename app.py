@@ -2,6 +2,7 @@ import streamlit as st
 
 from backend.database.sqlite import initialize_database
 from frontend.components.navbar import show_navigation
+from frontend.pages.analytics import show_analytics
 from frontend.pages.history import show_history
 from frontend.pages.home import show_home
 from frontend.pages.settings import show_settings
@@ -27,6 +28,9 @@ elif page == "Upload":
 
 elif page == "History":
     show_history()
+
+elif page == "Analytics":
+    show_analytics()
 
 else:
     show_settings()
