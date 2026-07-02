@@ -1,6 +1,6 @@
 default:
   tags:
-    - windows
+    - mac
 
 stages:
   - install
