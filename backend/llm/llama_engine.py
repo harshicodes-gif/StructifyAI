@@ -9,8 +9,7 @@ OLLAMA_URL = "http://localhost:11434"
 OLLAMA_TAGS_URL = f"{OLLAMA_URL}/api/tags"
 OLLAMA_GENERATE_URL = f"{OLLAMA_URL}/api/generate"
 
-# Default model. Change if you pull a different one.
-MODEL_NAME = "llama3.2:1b"
+MODEL_NAME = "llama3.2:3b"
 
 
 @lru_cache(maxsize=1)
@@ -24,8 +23,22 @@ def is_ollama_available() -> bool:
 
 
 def get_llm_mode() -> str:
-    """Return the active LLM mode."""
+    """Return the active processing mode."""
     return "Ollama" if is_ollama_available() else "OCR Only"
+
+
+def _default_response(error: str = "") -> dict:
+    """Return a default structured response."""
+    return {
+        "document_type": "Unknown",
+        "asset": "Not found",
+        "operator": "Not found",
+        "issue": "Not found",
+        "priority": "Not found",
+        "recommendation": "Not found",
+        "date": "Not found",
+        "error": error,
+    }
 
 
 def extract_json(text: str) -> dict:
@@ -34,20 +47,11 @@ def extract_json(text: str) -> dict:
     """
 
     if not is_ollama_available():
-        return {
-            "document_type": "Unknown",
-            "asset": "Not found",
-            "operator": "Not found",
-            "issue": "Not found",
-            "priority": "Not found",
-            "recommendation": "Not found",
-            "date": "Not found",
-            "error": "Ollama is not running.",
-        }
-
-    prompt = PROMPT.format(text=text)
+        return _default_response("Ollama is not running.")
 
     try:
+        prompt = PROMPT.format(text=text)
+
         response = requests.post(
             OLLAMA_GENERATE_URL,
             json={
@@ -61,18 +65,39 @@ def extract_json(text: str) -> dict:
 
         response.raise_for_status()
 
-        output = response.json().get("response", "{}")
+        payload = response.json()
 
-        return json.loads(output)
+        output = payload.get("response", "")
 
-    except Exception as e:
-        return {
-            "document_type": "Unknown",
-            "asset": "Not found",
-            "operator": "Not found",
-            "issue": "Not found",
-            "priority": "Not found",
-            "recommendation": "Not found",
-            "date": "Not found",
-            "error": str(e),
-        }
+        if not isinstance(output, str):
+            return _default_response("Invalid response returned by Ollama.")
+
+        output = output.strip()
+
+        # Remove markdown fences if present
+        if output.startswith("```"):
+            output = (
+                output.replace("```json", "")
+                .replace("```", "")
+                .strip()
+            )
+
+        try:
+            structured = json.loads(output)
+        except json.JSONDecodeError:
+            return _default_response(
+                f"Invalid JSON returned by Ollama:\n\n{output}"
+            )
+
+        if not isinstance(structured, dict):
+            return _default_response("Model returned non-dictionary JSON.")
+
+        defaults = _default_response()
+
+        for key, value in defaults.items():
+            structured.setdefault(key, value)
+
+        return structured
+
+    except Exception as exc:
+        return _default_response(str(exc))

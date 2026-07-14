@@ -9,6 +9,9 @@ python_version: "3.11"
 app_file: app.py
 pinned: false
 ---
+# Website URL (Live link)
+https://huggingface.co/spaces/Adwithaa/structifyAI
+
 # Structify AI
 
 > **Offline, CPU-First AI for Transforming Unstructured Documents into Structured Intelligence**

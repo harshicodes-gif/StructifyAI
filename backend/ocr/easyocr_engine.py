@@ -20,61 +20,119 @@ except Exception as e:
 
 
 def _ocr_image(image_path: str) -> str:
+    """Run OCR on an image."""
+
     result = reader.readtext(image_path)
 
     lines = []
 
     for _, text, _ in result:
-        lines.append(text)
+        text = text.strip()
+
+        if text:
+            lines.append(text)
 
     return "\n".join(lines)
 
 
+def _extract_pdf_text(document) -> str:
+    """
+    Try extracting embedded text from a PDF.
+
+    This is much faster and more accurate than OCR for
+    digitally-created PDFs.
+    """
+
+    pages = []
+
+    for page in document:
+        text = page.get_text("text").strip()
+
+        if text:
+            pages.append(text)
+
+    return "\n\n".join(pages)
+
+
+def _ocr_pdf(document) -> str:
+    """
+    OCR every page of a scanned PDF.
+    """
+
+    pages = []
+
+    for page in document:
+
+        pix = page.get_pixmap(dpi=300)
+
+        with tempfile.NamedTemporaryFile(
+            suffix=".png",
+            delete=True,
+        ) as tmp:
+
+            pix.save(tmp.name)
+
+            pages.append(_ocr_image(tmp.name))
+
+    return "\n\n".join(pages)
+
+
 def extract_text(file_path: str) -> str:
     """
-    Extract text from either an image or a PDF.
+    Extract text from an image or PDF.
+
+    Strategy:
+
+    Images
+        -> EasyOCR
+
+    PDFs
+        -> Embedded text extraction
+        -> OCR fallback
     """
 
     if not OCR_AVAILABLE or reader is None:
+
         return """
-Asset: Pump P-101
-Operator: John Smith
-Issue: Bearing Failure
-Priority: High
-Recommendation: Replace Bearing
+Document extraction unavailable because OCR is not installed.
 """
 
     suffix = Path(file_path).suffix.lower()
 
-    # --------------------
-    # IMAGE
-    # --------------------
-    if suffix in [".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"]:
+    # ---------------------------------------------------
+    # Images
+    # ---------------------------------------------------
+
+    if suffix in {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".bmp",
+        ".tif",
+        ".tiff",
+    }:
         return _ocr_image(file_path)
 
-    # --------------------
-    # PDF
-    # --------------------
+    # ---------------------------------------------------
+    # PDFs
+    # ---------------------------------------------------
+
     if suffix == ".pdf":
+
         document = fitz.open(file_path)
 
-        pages_text = []
+        try:
+            # First try embedded text
+            text = _extract_pdf_text(document)
 
-        for page_number in range(len(document)):
-            page = document.load_page(page_number)
+            # If enough text exists, don't OCR
+            if len(text.strip()) > 100:
+                return text
 
-            pix = page.get_pixmap(dpi=300)
+            # Otherwise OCR
+            return _ocr_pdf(document)
 
-            with tempfile.NamedTemporaryFile(
-                suffix=".png",
-                delete=False,
-            ) as tmp:
-                pix.save(tmp.name)
-
-                pages_text.append(_ocr_image(tmp.name))
-
-        document.close()
-
-        return "\n\n".join(pages_text)
+        finally:
+            document.close()
 
     raise ValueError(f"Unsupported file type: {suffix}")
