@@ -1,7 +1,7 @@
 import json
 
 from backend.cache.cache import get_cache, set_cache
-from backend.llm.llama_engine import extract_json, is_ollama_available
+from backend.llm.llama_engine import extract_json, get_llm_mode
 from backend.ocr.easyocr_engine import extract_text
 
 
@@ -9,15 +9,13 @@ def process_document(file_path: str) -> dict:
     """
     Complete document processing pipeline.
 
-    Image / PDF
+    Image/PDF
         ↓
-    OCR / Text Extraction
+    OCR/Text Extraction
         ↓
-    Cache
+    AI (Ollama or Groq)
         ↓
-    Ollama (if available)
-        ↓
-    Dynamic Structured JSON
+    Structured JSON
     """
 
     cached_result = get_cache(file_path)
@@ -27,23 +25,16 @@ def process_document(file_path: str) -> dict:
 
     extracted_text = extract_text(file_path)
 
-    processing_mode = "Ollama" if is_ollama_available() else "OCR Only"
+    processing_mode = get_llm_mode()
 
-    # ---------- Use Ollama whenever available ----------
-    if is_ollama_available():
-        structured_json = extract_json(extracted_text)
-    else:
-        structured_json = {
-            "document_type": "Unknown",
-            "summary": extracted_text[:500],
-            "raw_text": extracted_text,
-            "note": (
-                "Ollama is not available. "
-                "Install/start Ollama to enable AI extraction."
-            ),
-        }
+    # Always call the LLM.
+    # extract_json() will automatically choose:
+    #   Ollama
+    #   Groq
+    #   OCR fallback
+    structured_json = extract_json(extracted_text)
 
-    # ---------- Normalize response ----------
+    # Normalize response
     if isinstance(structured_json, str):
         try:
             structured_json = json.loads(structured_json)
