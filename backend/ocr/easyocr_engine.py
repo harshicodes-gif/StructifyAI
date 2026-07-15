@@ -1,12 +1,18 @@
 from pathlib import Path
 import tempfile
+import traceback
 
 OCR_AVAILABLE = False
 reader = None
+fitz = None
 
 try:
     import easyocr
     import fitz  # PyMuPDF
+
+    print("=" * 80)
+    print("[StructifyAI] Initializing EasyOCR...")
+    print("=" * 80)
 
     reader = easyocr.Reader(
         ["en"],
@@ -15,12 +21,22 @@ try:
 
     OCR_AVAILABLE = True
 
-except Exception as e:
-    print(f"[StructifyAI] OCR unavailable: {e}")
+    print("=" * 80)
+    print("[StructifyAI] EasyOCR initialized successfully.")
+    print("=" * 80)
+
+except Exception:
+    print("=" * 80)
+    print("[StructifyAI] OCR INITIALIZATION FAILED")
+    traceback.print_exc()
+    print("=" * 80)
 
 
 def _ocr_image(image_path: str) -> str:
     """Run OCR on an image."""
+
+    if reader is None:
+        raise RuntimeError("EasyOCR reader is not initialized.")
 
     result = reader.readtext(image_path)
 
@@ -37,10 +53,7 @@ def _ocr_image(image_path: str) -> str:
 
 def _extract_pdf_text(document) -> str:
     """
-    Try extracting embedded text from a PDF.
-
-    This is much faster and more accurate than OCR for
-    digitally-created PDFs.
+    Extract embedded text from a digital PDF.
     """
 
     pages = []
@@ -56,7 +69,7 @@ def _extract_pdf_text(document) -> str:
 
 def _ocr_pdf(document) -> str:
     """
-    OCR every page of a scanned PDF.
+    OCR scanned PDF pages.
     """
 
     pages = []
@@ -79,23 +92,21 @@ def _ocr_pdf(document) -> str:
 
 def extract_text(file_path: str) -> str:
     """
-    Extract text from an image or PDF.
-
-    Strategy:
+    Extract text from images and PDFs.
 
     Images
         -> EasyOCR
 
     PDFs
-        -> Embedded text extraction
+        -> Embedded text
         -> OCR fallback
     """
 
     if not OCR_AVAILABLE or reader is None:
-
-        return """
-Document extraction unavailable because OCR is not installed.
-"""
+        return (
+            "Document extraction unavailable because OCR failed to initialize.\n"
+            "Check the Streamlit logs for the initialization error."
+        )
 
     suffix = Path(file_path).suffix.lower()
 
@@ -122,14 +133,14 @@ Document extraction unavailable because OCR is not installed.
         document = fitz.open(file_path)
 
         try:
-            # First try embedded text
+
             text = _extract_pdf_text(document)
 
-            # If enough text exists, don't OCR
+            # Digital PDF
             if len(text.strip()) > 100:
                 return text
 
-            # Otherwise OCR
+            # Scanned PDF
             return _ocr_pdf(document)
 
         finally:
