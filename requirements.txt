@@ -3,7 +3,6 @@ streamlit>=1.46.0
 easyocr
 PyMuPDF
 pillow
-opencv-python
 numpy
 pandas
 sqlalchemy
