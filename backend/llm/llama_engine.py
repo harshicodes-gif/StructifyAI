@@ -3,6 +3,7 @@ import os
 from functools import lru_cache
 
 import requests
+import streamlit as st
 from groq import Groq
 
 from backend.llm.prompts import PROMPT
@@ -25,13 +26,23 @@ def is_ollama_available() -> bool:
         return False
 
 
+def get_groq_api_key():
+    """Return Groq API key from Streamlit Secrets or environment."""
+
+    try:
+        if "GROQ_API_KEY" in st.secrets:
+            return st.secrets["GROQ_API_KEY"]
+    except Exception:
+        pass
+
+    return os.getenv("GROQ_API_KEY")
+
+
 def is_groq_available() -> bool:
-    """Return whether a Groq API key is configured."""
-    return bool(os.getenv("GROQ_API_KEY"))
+    return bool(get_groq_api_key())
 
 
 def get_llm_mode() -> str:
-    """Return the active AI backend."""
     if is_ollama_available():
         return "Ollama"
 
@@ -99,14 +110,15 @@ def _extract_with_ollama(prompt: str) -> dict:
 
     response.raise_for_status()
 
-    output = response.json()["response"]
-
-    return _parse_response(output)
+    return _parse_response(
+        response.json()["response"]
+    )
 
 
 def _extract_with_groq(prompt: str) -> dict:
+
     client = Groq(
-        api_key=os.environ["GROQ_API_KEY"],
+        api_key=get_groq_api_key(),
     )
 
     completion = client.chat.completions.create(
@@ -121,13 +133,15 @@ def _extract_with_groq(prompt: str) -> dict:
         ],
     )
 
-    output = completion.choices[0].message.content
-
-    return _parse_response(output)
+    return _parse_response(
+        completion.choices[0].message.content
+    )
 
 
 def extract_json(text: str) -> dict:
-    """Convert OCR text into structured JSON."""
+    """
+    Convert OCR text into structured JSON.
+    """
 
     prompt = PROMPT.format(text=text)
 
@@ -139,9 +153,15 @@ def extract_json(text: str) -> dict:
         if is_groq_available():
             return _extract_with_groq(prompt)
 
-        return _default_response(
-            "No AI backend configured."
-        )
+        return {
+            "document_type": "Unknown",
+            "summary": "No AI backend available.",
+            "note": "Configure Ollama locally or add GROQ_API_KEY in Streamlit Secrets.",
+        }
 
     except Exception as exc:
-        return _default_response(str(exc))
+
+        return {
+            "document_type": "Unknown",
+            "summary": str(exc),
+        }
