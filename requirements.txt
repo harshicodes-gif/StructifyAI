@@ -1,6 +1,7 @@
 streamlit>=1.46.0
+
 easyocr
-pydantic
+PyMuPDF
 pillow
 opencv-python
 numpy
@@ -8,6 +9,9 @@ pandas
 sqlalchemy
 python-dotenv
 psutil
+pydantic
+requests
+groq
 
 pytest
 pytest-cov
@@ -22,4 +26,3 @@ semgrep
 pyupgrade
 pre-commit
 pip-audit
-PyMuPDF
