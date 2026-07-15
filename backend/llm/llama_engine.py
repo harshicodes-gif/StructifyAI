@@ -3,7 +3,12 @@ import os
 from functools import lru_cache
 
 import requests
-import streamlit as st
+
+try:
+    import streamlit as st
+except Exception:
+    st = None
+
 from groq import Groq
 
 from backend.llm.prompts import PROMPT
@@ -26,20 +31,24 @@ def is_ollama_available() -> bool:
         return False
 
 
-def get_groq_api_key():
-    """Return Groq API key from Streamlit Secrets or environment."""
+def get_groq_api_key() -> str | None:
+    """Read Groq API key from Streamlit secrets or environment."""
 
-    try:
-        if "GROQ_API_KEY" in st.secrets:
-            return st.secrets["GROQ_API_KEY"]
-    except Exception:
-        pass
+    # Streamlit Cloud
+    if st is not None:
+        try:
+            if "GROQ_API_KEY" in st.secrets:
+                return st.secrets["GROQ_API_KEY"]
+        except Exception:
+            pass
 
+    # Local development
     return os.getenv("GROQ_API_KEY")
 
 
 def is_groq_available() -> bool:
-    return bool(get_groq_api_key())
+    key = get_groq_api_key()
+    return bool(key)
 
 
 def get_llm_mode() -> str:
@@ -50,17 +59,6 @@ def get_llm_mode() -> str:
         return "Groq"
 
     return "OCR Only"
-
-
-def _default_response(error: str = "") -> dict:
-    response = {
-        "document_type": "Unknown",
-    }
-
-    if error:
-        response["error"] = error
-
-    return response
 
 
 def _clean_json(text: str) -> str:
@@ -110,16 +108,11 @@ def _extract_with_ollama(prompt: str) -> dict:
 
     response.raise_for_status()
 
-    return _parse_response(
-        response.json()["response"]
-    )
+    return _parse_response(response.json()["response"])
 
 
 def _extract_with_groq(prompt: str) -> dict:
-
-    client = Groq(
-        api_key=get_groq_api_key(),
-    )
+    client = Groq(api_key=get_groq_api_key())
 
     completion = client.chat.completions.create(
         model=GROQ_MODEL,
@@ -139,29 +132,40 @@ def _extract_with_groq(prompt: str) -> dict:
 
 
 def extract_json(text: str) -> dict:
-    """
-    Convert OCR text into structured JSON.
-    """
+    """Convert OCR text into structured JSON."""
 
     prompt = PROMPT.format(text=text)
 
     try:
 
-        if is_ollama_available():
+        # ---------- DEBUG ----------
+        ollama = is_ollama_available()
+        groq = is_groq_available()
+
+        if st is not None:
+            with st.expander("Debug Info", expanded=False):
+                st.write("Ollama Available:", ollama)
+                st.write("Groq Available:", groq)
+                st.write("Groq Key Found:", bool(get_groq_api_key()))
+        # ---------------------------
+
+        if ollama:
             return _extract_with_ollama(prompt)
 
-        if is_groq_available():
+        if groq:
             return _extract_with_groq(prompt)
 
         return {
             "document_type": "Unknown",
             "summary": "No AI backend available.",
-            "note": "Configure Ollama locally or add GROQ_API_KEY in Streamlit Secrets.",
+            "note": "Add a GROQ_API_KEY in Streamlit Secrets or run Ollama locally.",
         }
 
     except Exception as exc:
+        import traceback
 
         return {
             "document_type": "Unknown",
-            "summary": str(exc),
+            "summary": f"LLM Error: {exc}",
+            "traceback": traceback.format_exc(),
         }
